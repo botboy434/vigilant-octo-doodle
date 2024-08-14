@@ -262,7 +262,7 @@ async def voice_recog():
                 r.dynamic_energy_threshold = True
                 print("Say something!")
                 audio = r.listen(source)
-            text = r.recognize_vosk(audio).lower()
+            text = r.recognize_whisper(audio).lower()
 
             if "summon" in text or "salmon" in text:
                 found_multi_word_phrase = None
