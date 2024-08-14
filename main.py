@@ -4,6 +4,7 @@ from discord import app_commands
 from discord import Intents
 import speech_recognition as sr
 import threading
+from discord.ext import voice_recv
 
 global running
 running = False
@@ -206,7 +207,9 @@ client = MyClient(intents=intents)
 @client.tree.command()
 async def hello(interaction: discord.Interaction):
     """Syncs the command tree"""
-    await MyClient.setup_hook()
+    discord.VoiceChannel.id
+    await client.connect
+    await MyClient.setup_hook(client)
 
 
 
@@ -243,6 +246,9 @@ async def send_to_console(var1,var2):
     num = int(var2)
     print(f'spawn botboy434 {string} {num}')
 
+async def join(ctx):
+    await client.join_voice_channel(1159063234662371413)
+
 def start_voice_recognition():
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
@@ -257,7 +263,7 @@ async def voice_recog():
     stop_recognition = False
     while running:
         try:
-            with sr.Microphone() as source:
+            with voice_recv.extras.SpeechRecognitionSink() as source:
                 r.adjust_for_ambient_noise(source, duration=0.5)
                 r.dynamic_energy_threshold = True
                 print("Say something!")
