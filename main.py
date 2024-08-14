@@ -223,7 +223,10 @@ async def startserver(interaction: discord.Interaction):
 async def start(interaction: discord.Interaction):
     """Start voice recognition"""
     if not running:
-        voice_thread = threading.Thread(target=start_voice_recognition)
+        global voice_client
+        voice_channel = interaction.user.voice.channel
+        voice_client = await voice_channel.connect(cls=voice_recv.VoiceRecvClient)
+        voice_thread = threading.Thread(target=await start_voice_recognition(voice_client))
         voice_thread.start()
         await interaction.response.send_message('Microphone has been started!')
     else:
@@ -239,8 +242,10 @@ async def stop(interaction: discord.Interaction):
 
 @client.tree.command()
 async def join(interaction: discord.Interaction):
-    channel = interaction.user.voice.channel
-    await channel.connect()
+    """Don't run this unless you know what you're doing"""
+    global voice_client
+    voice_channel = interaction.user.voice.channel
+    voice_client = await voice_channel.connect(cls=voice_recv.VoiceRecvClient)
         
         
 async def send_to_console(var1,var2):
@@ -249,21 +254,34 @@ async def send_to_console(var1,var2):
     print(f'spawn botboy434 {string} {num}')
 
 
-def start_voice_recognition():
+async def start_voice_recognition(voice_client):
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-    loop.run_until_complete(voice_recog())
+    loop.run_until_complete(await voice_recog(voice_client))
     
 stop_recognition = False
 
-async def voice_recog():
+def callback(user, data: voice_recv.VoiceData):
+        #print(f"Got packet from {user}")
+
+        ## voice power level, how loud the user is speaking
+        # ext_data = packet.extension_data.get(voice_recv.ExtensionID.audio_power)
+        # value = int.from_bytes(ext_data, 'big')
+        # power = 127-(value & 127)
+        # print('#' * int(power * (79/128)))
+        ## instead of 79 you can use shutil.get_terminal_size().columns-1
+        callback2 = user
+
+
+async def voice_recog(voice_client):
     global running
     global stop_recognition
     running = True
     stop_recognition = False
     while running:
         try:
-            with voice_recv() as source:
+            print(voice_client.listen(voice_recv.extras.SpeechRecognitionSink))
+            with voice_client.listen(voice_recv.BasicSink(callback)) as source:
                 r.adjust_for_ambient_noise(source, duration=0.5)
                 r.dynamic_energy_threshold = True
                 print("Say something!")
