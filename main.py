@@ -261,17 +261,6 @@ async def start_voice_recognition(voice_client):
     
 stop_recognition = False
 
-def callback(user, data: voice_recv.VoiceData):
-        #print(f"Got packet from {user}")
-
-        ## voice power level, how loud the user is speaking
-        # ext_data = packet.extension_data.get(voice_recv.ExtensionID.audio_power)
-        # value = int.from_bytes(ext_data, 'big')
-        # power = 127-(value & 127)
-        # print('#' * int(power * (79/128)))
-        ## instead of 79 you can use shutil.get_terminal_size().columns-1
-        callback2 = user
-
 
 async def voice_recog(voice_client):
     global running
@@ -280,7 +269,7 @@ async def voice_recog(voice_client):
     stop_recognition = False
     while running:
         try:
-            with voice_client.listen(voice_recv.BasicSink(callback)) as source:
+            with sr.Microphone as source:
                 r.adjust_for_ambient_noise(source, duration=0.5)
                 r.dynamic_energy_threshold = True
                 print("Say something!")
