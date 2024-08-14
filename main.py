@@ -318,4 +318,4 @@ async def voice_recog():
 async def on_ready(): #When the discord bot is fully ready
     print("ready")
 
-client.run('MTE1OTA1MjYxNDgzOTg0NDg5Ng.Gxgx74.slJM2ppOAvx5P6jCXiBVR4VPMNLCLKM8xWPQHo')
+client.run('')
