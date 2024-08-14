@@ -280,7 +280,6 @@ async def voice_recog(voice_client):
     stop_recognition = False
     while running:
         try:
-            print(voice_client.listen(voice_recv.extras.SpeechRecognitionSink))
             with voice_client.listen(voice_recv.BasicSink(callback)) as source:
                 r.adjust_for_ambient_noise(source, duration=0.5)
                 r.dynamic_energy_threshold = True
