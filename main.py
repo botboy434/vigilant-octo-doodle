@@ -4,6 +4,7 @@ from discord import app_commands
 from discord import Intents
 import speech_recognition as sr
 import threading
+import io
 from discord.ext import voice_recv
 
 global running
@@ -246,6 +247,9 @@ async def join(interaction: discord.Interaction):
     global voice_client
     voice_channel = interaction.user.voice.channel
     voice_client = await voice_channel.connect(cls=voice_recv.VoiceRecvClient)
+    await asyncio.sleep(10)
+    print("recording!")
+    await save_to_wav()
         
         
 async def send_to_console(var1,var2):
@@ -261,12 +265,21 @@ async def start_voice_recognition(voice_client):
     
 stop_recognition = False
 
+async def save_to_wav():
+    sink = voice_recv.WaveSink()
+    sink.__init__("recording.wav")
+    await(10)
+    sink.cleanup()
+    
+
 
 async def voice_recog(voice_client):
     global running
     global stop_recognition
     running = True
     stop_recognition = False
+
+    
     while running:
         try:
             with sr.Microphone as source:
