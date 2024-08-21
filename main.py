@@ -1,10 +1,8 @@
 import asyncio, datetime, json
-import discord
-from discord import app_commands
-from discord import Intents
 from pytale import Py_Tale
 import speech_recognition as sr
 import threading
+import sys
 
 global running
 running = False
@@ -178,99 +176,71 @@ phrase_lookup = {
     "sai": "Sai",
 }
 phrases=('oakwood', 'birchwood', 'ashwood', 'redwood', 'psyblade', 'waka zasshi blade', 'hibiya farro', 'hebrews arrow', 'psy', 'wakas ashi', 'waikato sashi' 'spyglass', 'sand stone', 'read iron ingot', 'veridium ingot', 'mithril ingot', 'Valiant ingot', 'bellion ingot', 'red wood bow', 'red wood arrow shaft', 'gored', 'un ripe tomato', 'un ripe pumpkin', 'un ripe potato', 'un ripe onion', 'un ripe garlic', 'un ripe eggplant', 'un ripe carrot', 'spriggle meat', 'un ripe blueberry', 'un ripe apple', 'hebios guard',  'babu meet', 'dye meat', 'baboon meet', 'die meat', 'die meet', 'dye meet', 'waka zasshi handle', 'why kizashi handle', 'hibiya scarred', 'tibios guard', 'hebrews god', 'hebrews guard', 'oak wood', 'birch wood', 'walnut wood', 'ash wood', 'red wood', 'candy cane', 'katana blade', 'naginata blade', 'sai blade', 'wakizashi blade', 'hebios arrow', 'katana', 'kunai', 'naginata', 'sai', 'wakizashi', 'brown mushroom shield', 'red mushroom shield', 'wooden dice', 'spy glass', 'fuel core', 'stick', 'stone', 'sandstone', 'salt', 'grass', 'flint', 'crystal gem', 'coal', 'lantern', 'woodcutting bag', 'mining bag', 'hoarder bag', 'foraging bag', 'potion bag', 'leather backpack', 'electrum ingot', 'silver ingot', 'red iron ingot', 'viridium ingot', 'mythril ingot', 'iron ingot', 'gold ingot', 'valyan ingot', 'copper ingot', 'palladium ingot', 'gold coin', 'flashlight', 'firework', 'dynamite', 'small metal shield', 'large metal shield', 'quiver', 'metal bow', 'crystal sword', 'crystal pickaxe', 'crystal lance', 'bow', 'birch bow', 'walnut bow', 'ash bow', 'redwood bow', 'arrow shaft', 'birch arrow shaft', 'walnut arrow shaft', 'ash arrow shaft', 'redwood arrow shaft', 'teleportation potion', 'wooden stake', 'wooden net', 'geode', 'key', 'gourd', 'unripe tomato', 'unripe pumpkin', 'unripe potato', 'unripe onion', 'unripe garlic', 'unripe eggplant', 'unripe carrot', 'babu meat', 'dai meat', 'spriggull meat', 'unripe blueberry', 'unripe apple', 'red feather', 'blue feather', 'wakizashi handle', 'naginata handle', 'kunai handle', 'katana handle', 'metal fist handle', 'short metal pointed handle', 'short fancy handle', 'short metal handle', 'medium fancy handle', 'medium metal handle', 'long metal handle', 'fabric square', 'leather roll', 'red leather roll', 'grey leather roll', 'green leather roll', 'large leather roll', 'large red leather roll', 'large grey leather roll', 'large green leather roll', 'rope', 'metal plate', 'metal buckles', 'wooden sword', 'healing pod', 'turabada eyes', 'crystal spike', 'wooden club', 'phantom guard', 'wooden ladle', 'bucket', 'wooden bowl', 'cauldron')
-MY_GUILD = discord.Object(id=1159063232984666185)  # replace with your guild id
 
 
-class MyClient(discord.Client):
-    def __init__(self, *, intents: discord.Intents):
-        super().__init__(intents=intents)
-        # A CommandTree is a special type that holds all the application command
-        # state required to make it work. This is a separate class because it
-        # allows all the extra state to be opt-in.
-        # Whenever you want to work with application commands, your tree is used
-        # to store and work with them.
-        # Note: When using commands.Bot instead of discord.Client, the bot will
-        # maintain its own tree instead.
-        self.tree = app_commands.CommandTree(self)
+import sys
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLineEdit, QPushButton
 
-    # In this basic example, we just synchronize the app commands to one guild.
-    # Instead of specifying a guild to every command, we copy over our global commands instead.
-    # By doing so, we don't have to wait up to an hour until they are shown to the end-user.
-    async def setup_hook(self):
-        # This copies the global commands over to your guild.
-        self.tree.copy_global_to(guild=MY_GUILD)
-        await self.tree.sync(guild=MY_GUILD)
+class MyWindow(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("PyQt Layout Example")
+        self.setGeometry(100, 100, 300, 200)
 
+        # Create widgets
+        self.input_field = QLineEdit()
+        self.button1 = QPushButton("Button 1")
+        self.button2 = QPushButton("Button 2")
+        self.button3 = QPushButton("Button 3")
+        self.button4 = QPushButton("Button 4")
 
-intents = discord.Intents.default()
-client = MyClient(intents=intents)
+        # Create a vertical layout
+        layout = QVBoxLayout()
+        layout.addWidget(self.input_field)  # Add the input field
+        layout.addWidget(self.button1)
+        layout.addWidget(self.button2)
+        layout.addWidget(self.button3)
+        layout.addWidget(self.button4)
 
-@client.tree.command()
-async def hello(interaction: discord.Interaction):
-    """Syncs the command tree"""
-    await MyClient.setup_hook()
+        self.setLayout(layout)
 
-
-@client.tree.command()
-async def getconsoles(interaction: discord.Interaction):
-    """Returns the active consoles and corresponding websockets"""
-    await bot.wait_for_ws()
-    consoles = await bot.get_active_consoles()
-    await interaction.response.send_message(consoles)
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    window = MyWindow()
+    window.show()
+    sys.exit(app.exec_())
 
 
-@client.tree.command()
-async def getsubscriptions(interaction: discord.Interaction):
-    """Returns the servers with their subscriptions you have set up"""
-    await bot.wait_for_ws()
-    consoles = await bot.get_console_subs()
-    await interaction.response.send_message(consoles)
 
 
-@client.tree.command()
-@app_commands.describe(
-    command_to_run='The command to be executed',
-)
-async def command(interaction: discord.Interaction, command_to_run: str):
+
+
+async def command( command_to_run: str):
     """Send a manual command to the server, and replies with the response"""
     await bot.wait_for_ws()
-    await interaction.response.send_message(await bot.send_command_console(server_id, command_to_run))
-
-@client.tree.command()
-@app_commands.describe(
-    first_value='The name of the player to get the position of',
-)
-async def where(interaction: discord.Interaction, first_value: str):
-    """Gets the vector3 position of a player from a server"""
-    result = await bot.send_command_console(1906072840, f'player detailed {first_value}')
-    await interaction.response.send_message(f'Vector3 position of {first_value}: {result["data"]["Result"]["Position"]}')
+    await bot.send_command_console(server_id, command_to_run)
 
 
-@client.tree.command()
-async def startserver(interaction: discord.Interaction):
+
+async def startserver():
     """Starts a websocket console for the server"""
     await bot.wait_for_ws()
     await bot.create_console(1906072840)
 
 
-@client.tree.command()
-async def start(interaction: discord.Interaction):
+
+async def start():
     """Start voice recognition"""
     if not running:
         voice_thread = threading.Thread(target=start_voice_recognition)
         voice_thread.start()
-        await interaction.response.send_message('Microphone has been started!')
-    else:
-        await interaction.response.send_message('Voice recognition is already running.')
 
 
-@client.tree.command()
-async def stop(interaction: discord.Interaction):
+
+async def stop():
     """Stop voice recognition"""
     global stop_recognition
     stop_recognition = True
-    await interaction.response.send_message('Voice recognition has been stopped once you finish speaking')
-
         
         
         
@@ -300,7 +270,7 @@ async def voice_recog():
                 r.dynamic_energy_threshold = True
                 print("Say something!")
                 audio = r.listen(source)
-            text = r.recognize_google(audio).lower()
+            text = r.recognize_vosk(audio).lower()
 
             if "summon" in text or "salmon" in text:
                 found_multi_word_phrase = None
@@ -353,7 +323,6 @@ async def voice_recog():
 
 
 
-@client.event
 async def on_ready(): #When the discord bot is fully ready
     print("ready")
     asyncio.create_task(bot.run()) #start the bot
@@ -366,5 +335,3 @@ bot.config(client_id='client_75e6b625-24c6-4021-880c-ad28cf4413f3',
            scope_string='ws.group ws.group_members ws.group_servers ws.group_bans ws.group_invites group.info group.join group.leave group.view group.members group.invite server.view server.console',
            client_secret='',
            debug=True) 
-
-client.run('')
