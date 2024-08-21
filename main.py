@@ -3,6 +3,7 @@ from pytale import Py_Tale
 import speech_recognition as sr
 import threading
 import sys
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLineEdit, QPushButton
 
 global running
 running = False
@@ -178,8 +179,8 @@ phrase_lookup = {
 phrases=('oakwood', 'birchwood', 'ashwood', 'redwood', 'psyblade', 'waka zasshi blade', 'hibiya farro', 'hebrews arrow', 'psy', 'wakas ashi', 'waikato sashi' 'spyglass', 'sand stone', 'read iron ingot', 'veridium ingot', 'mithril ingot', 'Valiant ingot', 'bellion ingot', 'red wood bow', 'red wood arrow shaft', 'gored', 'un ripe tomato', 'un ripe pumpkin', 'un ripe potato', 'un ripe onion', 'un ripe garlic', 'un ripe eggplant', 'un ripe carrot', 'spriggle meat', 'un ripe blueberry', 'un ripe apple', 'hebios guard',  'babu meet', 'dye meat', 'baboon meet', 'die meat', 'die meet', 'dye meet', 'waka zasshi handle', 'why kizashi handle', 'hibiya scarred', 'tibios guard', 'hebrews god', 'hebrews guard', 'oak wood', 'birch wood', 'walnut wood', 'ash wood', 'red wood', 'candy cane', 'katana blade', 'naginata blade', 'sai blade', 'wakizashi blade', 'hebios arrow', 'katana', 'kunai', 'naginata', 'sai', 'wakizashi', 'brown mushroom shield', 'red mushroom shield', 'wooden dice', 'spy glass', 'fuel core', 'stick', 'stone', 'sandstone', 'salt', 'grass', 'flint', 'crystal gem', 'coal', 'lantern', 'woodcutting bag', 'mining bag', 'hoarder bag', 'foraging bag', 'potion bag', 'leather backpack', 'electrum ingot', 'silver ingot', 'red iron ingot', 'viridium ingot', 'mythril ingot', 'iron ingot', 'gold ingot', 'valyan ingot', 'copper ingot', 'palladium ingot', 'gold coin', 'flashlight', 'firework', 'dynamite', 'small metal shield', 'large metal shield', 'quiver', 'metal bow', 'crystal sword', 'crystal pickaxe', 'crystal lance', 'bow', 'birch bow', 'walnut bow', 'ash bow', 'redwood bow', 'arrow shaft', 'birch arrow shaft', 'walnut arrow shaft', 'ash arrow shaft', 'redwood arrow shaft', 'teleportation potion', 'wooden stake', 'wooden net', 'geode', 'key', 'gourd', 'unripe tomato', 'unripe pumpkin', 'unripe potato', 'unripe onion', 'unripe garlic', 'unripe eggplant', 'unripe carrot', 'babu meat', 'dai meat', 'spriggull meat', 'unripe blueberry', 'unripe apple', 'red feather', 'blue feather', 'wakizashi handle', 'naginata handle', 'kunai handle', 'katana handle', 'metal fist handle', 'short metal pointed handle', 'short fancy handle', 'short metal handle', 'medium fancy handle', 'medium metal handle', 'long metal handle', 'fabric square', 'leather roll', 'red leather roll', 'grey leather roll', 'green leather roll', 'large leather roll', 'large red leather roll', 'large grey leather roll', 'large green leather roll', 'rope', 'metal plate', 'metal buckles', 'wooden sword', 'healing pod', 'turabada eyes', 'crystal spike', 'wooden club', 'phantom guard', 'wooden ladle', 'bucket', 'wooden bowl', 'cauldron')
 
 
-import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLineEdit, QPushButton
+
+
 
 class MyWindow(QWidget):
     def __init__(self):
@@ -187,22 +188,39 @@ class MyWindow(QWidget):
         self.setWindowTitle("PyQt Layout Example")
         self.setGeometry(100, 100, 300, 200)
 
-        # Create widgets
         self.input_field = QLineEdit()
-        self.button1 = QPushButton("Button 1")
-        self.button2 = QPushButton("Button 2")
-        self.button3 = QPushButton("Button 3")
-        self.button4 = QPushButton("Button 4")
+        self.button1 = QPushButton("Start listening")
+        self.button2 = QPushButton("Stop listening")
+        self.button3 = QPushButton("Start the server")
+        self.button4 = QPushButton("Send command")
 
-        # Create a vertical layout
+        self.button1.clicked.connect(self.on_button1_click)
+        self.button2.clicked.connect(self.on_button2_click)
+        self.button3.clicked.connect(self.on_button3_click)
+        self.button4.clicked.connect(self.on_button4_click)
+
         layout = QVBoxLayout()
-        layout.addWidget(self.input_field)  # Add the input field
+        layout.addWidget(self.input_field)
         layout.addWidget(self.button1)
         layout.addWidget(self.button2)
         layout.addWidget(self.button3)
         layout.addWidget(self.button4)
 
         self.setLayout(layout)
+
+    def on_button1_click(self):
+        start()
+
+    def on_button2_click(self):
+        stop()
+
+    def on_button3_click(self):
+        startserver()
+
+    def on_button4_click(self):
+        text = self.input_field.text
+        print(text)
+        #command(text)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
@@ -211,11 +229,7 @@ if __name__ == "__main__":
     sys.exit(app.exec_())
 
 
-
-
-
-
-async def command( command_to_run: str):
+async def command(command_to_run: str):
     """Send a manual command to the server, and replies with the response"""
     await bot.wait_for_ws()
     await bot.send_command_console(server_id, command_to_run)
