@@ -2,14 +2,14 @@ import asyncio, datetime, json
 import discord
 from discord import app_commands
 from discord import Intents
+from pytale import Py_Tale
 import speech_recognition as sr
 import threading
-import io
-from discord.ext import voice_recv
 
 global running
 running = False
 r = sr.Recognizer()
+server_id = 1906072840
 phrase_lookup = {
     "short metal pointed handle": "HandleShortPointyEnd",
     "large green leather roll": "SoftFabricLargeRoll wyrmfaceleather",
@@ -208,26 +208,56 @@ client = MyClient(intents=intents)
 @client.tree.command()
 async def hello(interaction: discord.Interaction):
     """Syncs the command tree"""
-    discord.VoiceChannel.id
-    channel = interaction.user.voice.channel
-    await channel.connect()
+    await MyClient.setup_hook()
 
+
+@client.tree.command()
+async def getconsoles(interaction: discord.Interaction):
+    """Returns the active consoles and corresponding websockets"""
+    await bot.wait_for_ws()
+    consoles = await bot.get_active_consoles()
+    await interaction.response.send_message(consoles)
+
+
+@client.tree.command()
+async def getsubscriptions(interaction: discord.Interaction):
+    """Returns the servers with their subscriptions you have set up"""
+    await bot.wait_for_ws()
+    consoles = await bot.get_console_subs()
+    await interaction.response.send_message(consoles)
+
+
+@client.tree.command()
+@app_commands.describe(
+    command_to_run='The command to be executed',
+)
+async def command(interaction: discord.Interaction, command_to_run: str):
+    """Send a manual command to the server, and replies with the response"""
+    await bot.wait_for_ws()
+    await interaction.response.send_message(await bot.send_command_console(server_id, command_to_run))
+
+@client.tree.command()
+@app_commands.describe(
+    first_value='The name of the player to get the position of',
+)
+async def where(interaction: discord.Interaction, first_value: str):
+    """Gets the vector3 position of a player from a server"""
+    result = await bot.send_command_console(1906072840, f'player detailed {first_value}')
+    await interaction.response.send_message(f'Vector3 position of {first_value}: {result["data"]["Result"]["Position"]}')
 
 
 @client.tree.command()
 async def startserver(interaction: discord.Interaction):
     """Starts a websocket console for the server"""
-    await print("Opened websocket!")
+    await bot.wait_for_ws()
+    await bot.create_console(1906072840)
 
 
 @client.tree.command()
 async def start(interaction: discord.Interaction):
     """Start voice recognition"""
     if not running:
-        global voice_client
-        voice_channel = interaction.user.voice.channel
-        voice_client = await voice_channel.connect(cls=voice_recv.VoiceRecvClient)
-        voice_thread = threading.Thread(target=await start_voice_recognition(voice_client))
+        voice_thread = threading.Thread(target=start_voice_recognition)
         voice_thread.start()
         await interaction.response.send_message('Microphone has been started!')
     else:
@@ -241,53 +271,36 @@ async def stop(interaction: discord.Interaction):
     stop_recognition = True
     await interaction.response.send_message('Voice recognition has been stopped once you finish speaking')
 
-@client.tree.command()
-async def join(interaction: discord.Interaction):
-    """Don't run this unless you know what you're doing"""
-    global voice_client
-    voice_channel = interaction.user.voice.channel
-    voice_client = await voice_channel.connect(cls=voice_recv.VoiceRecvClient)
-    await asyncio.sleep(10)
-    print("recording!")
-    await save_to_wav()
         
         
+        
+
 async def send_to_console(var1,var2):
     string = phrase_lookup.get(var1)
     num = int(var2)
+    await bot.send_command_console(server_id, f'spawn botboy434 {string} {num}')
     print(f'spawn botboy434 {string} {num}')
 
-
-async def start_voice_recognition(voice_client):
+def start_voice_recognition():
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-    loop.run_until_complete(await voice_recog(voice_client))
+    loop.run_until_complete(voice_recog())
     
 stop_recognition = False
 
-async def save_to_wav():
-    sink = voice_recv.WaveSink()
-    sink.__init__("recording.wav")
-    await(10)
-    sink.cleanup()
-    
-
-
-async def voice_recog(voice_client):
+async def voice_recog():
     global running
     global stop_recognition
     running = True
     stop_recognition = False
-
-    
     while running:
         try:
-            with sr.Microphone as source:
+            with sr.Microphone() as source:
                 r.adjust_for_ambient_noise(source, duration=0.5)
                 r.dynamic_energy_threshold = True
                 print("Say something!")
                 audio = r.listen(source)
-            text = r.recognize_whisper(audio).lower()
+            text = r.recognize_google(audio).lower()
 
             if "summon" in text or "salmon" in text:
                 found_multi_word_phrase = None
@@ -312,18 +325,19 @@ async def voice_recog(voice_client):
 
                 if found_multi_word_phrase:
                     print(f"Found phrase '{found_multi_word_phrase}' in the recognized text: {text}")
+                    # If no number is detected for the multi-word phrase, default to 1
                     if number is None:
                         number = 1
                     await send_to_console(found_multi_word_phrase, number)
                 elif found_single_word_phrase:
                     print(f"Found single-word phrase '{found_single_word_phrase}' in the recognized text: {text}")
+                    # If no number is detected for the single-word phrase, default to 1
                     if number is None:
                         number = 1
                     await send_to_console(found_single_word_phrase, number)
                 else:
                     print("No valid phrases found in the recognized text.")
             else:
-                print(text)
                 print("'Summon' or 'Salmon' was not found in the recognized text.")
 
             # Check the stop_recognition flag
@@ -342,5 +356,15 @@ async def voice_recog(voice_client):
 @client.event
 async def on_ready(): #When the discord bot is fully ready
     print("ready")
+    asyncio.create_task(bot.run()) #start the bot
+    await bot.wait_for_ws()     # Wait to make sure the main websocket is running before continuing.
+    await bot.create_console(server_id, timeout=5)    #this will start a connection to this console every time the server starts up
+
+bot = Py_Tale()
+bot.config(client_id='client_75e6b625-24c6-4021-880c-ad28cf4413f3',
+           user_id=1971323560,
+           scope_string='ws.group ws.group_members ws.group_servers ws.group_bans ws.group_invites group.info group.join group.leave group.view group.members group.invite server.view server.console',
+           client_secret='',
+           debug=True) 
 
 client.run('')
