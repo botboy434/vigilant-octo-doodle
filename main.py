@@ -3,7 +3,8 @@ from pytale import Py_Tale
 import speech_recognition as sr
 import threading
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLineEdit, QPushButton
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLineEdit, QPushButton, QLabel
+from PyQt5.QtCore import Qt
 
 global running
 running = False
@@ -178,13 +179,6 @@ phrase_lookup = {
 }
 phrases=('oakwood', 'birchwood', 'ashwood', 'redwood', 'psyblade', 'waka zasshi blade', 'hibiya farro', 'hebrews arrow', 'psy', 'wakas ashi', 'waikato sashi' 'spyglass', 'sand stone', 'read iron ingot', 'veridium ingot', 'mithril ingot', 'Valiant ingot', 'bellion ingot', 'red wood bow', 'red wood arrow shaft', 'gored', 'un ripe tomato', 'un ripe pumpkin', 'un ripe potato', 'un ripe onion', 'un ripe garlic', 'un ripe eggplant', 'un ripe carrot', 'spriggle meat', 'un ripe blueberry', 'un ripe apple', 'hebios guard',  'babu meet', 'dye meat', 'baboon meet', 'die meat', 'die meet', 'dye meet', 'waka zasshi handle', 'why kizashi handle', 'hibiya scarred', 'tibios guard', 'hebrews god', 'hebrews guard', 'oak wood', 'birch wood', 'walnut wood', 'ash wood', 'red wood', 'candy cane', 'katana blade', 'naginata blade', 'sai blade', 'wakizashi blade', 'hebios arrow', 'katana', 'kunai', 'naginata', 'sai', 'wakizashi', 'brown mushroom shield', 'red mushroom shield', 'wooden dice', 'spy glass', 'fuel core', 'stick', 'stone', 'sandstone', 'salt', 'grass', 'flint', 'crystal gem', 'coal', 'lantern', 'woodcutting bag', 'mining bag', 'hoarder bag', 'foraging bag', 'potion bag', 'leather backpack', 'electrum ingot', 'silver ingot', 'red iron ingot', 'viridium ingot', 'mythril ingot', 'iron ingot', 'gold ingot', 'valyan ingot', 'copper ingot', 'palladium ingot', 'gold coin', 'flashlight', 'firework', 'dynamite', 'small metal shield', 'large metal shield', 'quiver', 'metal bow', 'crystal sword', 'crystal pickaxe', 'crystal lance', 'bow', 'birch bow', 'walnut bow', 'ash bow', 'redwood bow', 'arrow shaft', 'birch arrow shaft', 'walnut arrow shaft', 'ash arrow shaft', 'redwood arrow shaft', 'teleportation potion', 'wooden stake', 'wooden net', 'geode', 'key', 'gourd', 'unripe tomato', 'unripe pumpkin', 'unripe potato', 'unripe onion', 'unripe garlic', 'unripe eggplant', 'unripe carrot', 'babu meat', 'dai meat', 'spriggull meat', 'unripe blueberry', 'unripe apple', 'red feather', 'blue feather', 'wakizashi handle', 'naginata handle', 'kunai handle', 'katana handle', 'metal fist handle', 'short metal pointed handle', 'short fancy handle', 'short metal handle', 'medium fancy handle', 'medium metal handle', 'long metal handle', 'fabric square', 'leather roll', 'red leather roll', 'grey leather roll', 'green leather roll', 'large leather roll', 'large red leather roll', 'large grey leather roll', 'large green leather roll', 'rope', 'metal plate', 'metal buckles', 'wooden sword', 'healing pod', 'turabada eyes', 'crystal spike', 'wooden club', 'phantom guard', 'wooden ladle', 'bucket', 'wooden bowl', 'cauldron')
 
-import asyncio
-import threading
-import sys
-import speech_recognition as sr
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLineEdit, QPushButton, QLabel
-from PyQt5.QtCore import Qt
-from pytale import Py_Tale
 
 async def command(command_to_run: str):
     """Send a manual command to the server, and replies with the response"""
@@ -291,6 +285,9 @@ bot.config(client_id='client_75e6b625-24c6-4021-880c-ad28cf4413f3',
            client_secret='',
            debug=True)
 
+
+
+## Why the hell does my gui keep on freezing up, need to thread it i think
 class MyWindow(QWidget):
     def __init__(self):
         super().__init__()
