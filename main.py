@@ -6,6 +6,7 @@ import sys
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLineEdit, QPushButton, QLabel
 from PyQt5.QtCore import Qt
 from qasync import QEventLoop
+import signal
 
 global running
 running = False
@@ -194,8 +195,7 @@ async def startserver():
 async def start():
     """Start voice recognition"""
     if not running:
-        voice_thread = threading.Thread(target=start_voice_recognition)
-        voice_thread.start()
+        asyncio.create_task(voice_recog())
 
 async def stop():
     """Stop voice recognition"""
@@ -211,28 +211,25 @@ async def send_to_console(var1, var2):
 async def start_voice_recognition():
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-    await loop.run_until_complete(voice_recog())
+    await loop.run_until_complete(await voice_recog())
 
 async def voice_recog():
     global running
     global stop_recognition
     running = True
     stop_recognition = False
+
     while running:
         try:
-            with sr.Microphone() as source:
-                r.adjust_for_ambient_noise(source, duration=0.5)
-                r.dynamic_energy_threshold = True
-                print("Say something!")
-                audio = r.listen(source)
-            text = r.recognize_vosk(audio).lower()
+
+            text = await asyncio.get_running_loop().run_in_executor(None, recognize_speech)
+            text = text.lower()
 
             if "summon" in text or "salmon" in text:
                 found_multi_word_phrase = None
                 for phrase, action in phrase_lookup.items():
                     if phrase in text:
                         found_multi_word_phrase = phrase
-                        print(phrase)
                         break
 
                 found_single_word_phrase = None
@@ -242,42 +239,48 @@ async def voice_recog():
                         found_single_word_phrase = word
                         break
 
-                number = None  # Default to None
+                number = None
                 for i, word in enumerate(words):
                     if word.isdigit():
                         number = int(word)
                         break
 
                 if found_multi_word_phrase:
-                    print(f"Found phrase '{found_multi_word_phrase}' in the recognized text: {text}")
                     if number is None:
                         number = 1
                     await send_to_console(found_multi_word_phrase, number)
                 elif found_single_word_phrase:
-                    print(f"Found single-word phrase '{found_single_word_phrase}' in the recognized text: {text}")
                     if number is None:
                         number = 1
                     await send_to_console(found_single_word_phrase, number)
-                else:
-                    print("No valid phrases found in the recognized text.")
             else:
                 print("'Summon' or 'Salmon' was not found in the recognized text.")
+                print(text)
 
             if stop_recognition:
                 running = False
                 print("Stopping voice recognition...")
-                break  # Exit the loop
+                break
 
         except sr.UnknownValueError:
             print("Vosk Speech Recognition could not understand audio")
         except sr.RequestError as e:
             print(f"Could not request results from Vosk Speech Recognition service; {e}")
 
+def recognize_speech():
+    with sr.Microphone() as source:
+        r.adjust_for_ambient_noise(source, duration=0.5)
+        r.dynamic_energy_threshold = True
+        print("Say something!")
+        audio = r.listen(source)
+    text = r.recognize_vosk(audio)
+    return text
+
 async def on_ready():
     print("ready")
-    asyncio.create_task(bot.run())  # start the bot
-    await bot.wait_for_ws()  # Wait to make sure the main websocket is running before continuing.
-    await bot.create_console(server_id, timeout=5)  # this will start a connection to this console every time the server starts up
+    asyncio.create_task(bot.run())
+    await bot.wait_for_ws()
+    await bot.create_console(server_id, timeout=5)
 
 bot = Py_Tale()
 bot.config(client_id='client_75e6b625-24c6-4021-880c-ad28cf4413f3',
@@ -322,40 +325,52 @@ class MyWindow(QWidget):
         self.setLayout(layout)
 
     def start_voice_recog(self):
-        asyncio.ensure_future(self._start_voice_recog())
+        asyncio.create_task(self._start_voice_recog())
 
     async def _start_voice_recog(self):
         await start()
 
     def stop_voice_recognition(self):
-        asyncio.ensure_future(self._stop_voice_recognition())
+        asyncio.create_task(self._stop_voice_recognition())
 
     async def _stop_voice_recognition(self):
         await stop()
 
     def start_server(self):
-        asyncio.ensure_future(self._start_server())
+        asyncio.create_task(self._start_server())
 
     async def _start_server(self):
         await startserver()
 
     def send_command(self):
         command_text = self.command_input.text()
-        asyncio.ensure_future(self._send_command(command_text))
+        asyncio.create_task(self._send_command(command_text))
 
     async def _send_command(self, command_text):
-        await send_to_console(command_text)
+        await command(command_text)
+
+
+stop_event = asyncio.Event()
 
 async def main():
     app = QApplication(sys.argv)
+    window = MyWindow()
+    window.show() 
     loop = QEventLoop(app)
     asyncio.set_event_loop(loop)
+    def signal_handler(sig, frame):
+        print("SIGINT received, stopping...")
+        stop_event.set()
 
-    window = MyWindow()
-    window.show()
+    signal.signal(signal.SIGINT, signal_handler)
 
     with loop:
-        await loop.run_forever()
+        try:
+            await stop_event.wait()
+        except asyncio.CancelledError:
+            pass
+        finally:
+            app.quit()
 
 if __name__ == '__main__':
     asyncio.run(main())
