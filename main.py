@@ -2,8 +2,12 @@ import asyncio, datetime, json
 from py_tale import Py_Tale
 import speech_recognition as sr
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QGridLayout, QLineEdit, QPushButton, QLabel
-from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import *
+from PyQt5.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont,
+    QFontDatabase, QIcon, QLinearGradient, QPalette, QPainter, QPixmap,
+    QRadialGradient)
+from PyQt5.QtCore import (QCoreApplication, QMetaObject, QObject, QPoint,
+    QRect, QSize, QUrl, Qt)
 from qasync import QEventLoop
 
 global running
@@ -294,39 +298,97 @@ bot.config(client_id=clientid,
            client_secret=clientsecret,
            debug=True)
 
-class MyWindow(QWidget):
-    def __init__(self):
-        super().__init__()
-        self.init_ui()
+class Ui_MainWindow(object):
+    def setupUi(self, MainWindow):
+        if MainWindow.objectName():
+            MainWindow.setObjectName(u"MainWindow")
+        def on_about_to_quit():
+            print("Application closing...")
+            stop_event.set()  # Signal the event to stop all tasks
+        app.aboutToQuit.connect(on_about_to_quit)
+        MainWindow.resize(260, 310)
+        self.centralwidget = QWidget(MainWindow)
+        self.centralwidget.setObjectName(u"centralwidget")
+        self.verticalLayoutWidget = QWidget(self.centralwidget)
+        self.verticalLayoutWidget.setObjectName(u"verticalLayoutWidget")
+        self.verticalLayoutWidget.setGeometry(QRect(-1, -1, 261, 281))
+        self.verticalLayout = QVBoxLayout(self.verticalLayoutWidget)
+        self.verticalLayout.setObjectName(u"verticalLayout")
+        self.verticalLayout.setContentsMargins(0, 0, 0, 0)
+        self.horizontalSpacer_2 = QSpacerItem(40, 10, QSizePolicy.Expanding, QSizePolicy.Minimum)
 
-    def init_ui(self):
-        self.setWindowTitle("Bot Control GUI")
-        self.setGeometry(0, 0, 259, 300)
+        self.verticalLayout.addItem(self.horizontalSpacer_2)
 
-        layout = QGridLayout()
+        self.command_input = QLineEdit(self.verticalLayoutWidget)
+        self.command_input.setObjectName(u"command_input")
 
-        self.command_input = QLineEdit()
+        self.verticalLayout.addWidget(self.command_input)
+
+        self.command_button = QPushButton(self.verticalLayoutWidget)
+        self.command_button.setObjectName(u"command_button")
+        sizePolicy = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.command_button.sizePolicy().hasHeightForWidth())
+        self.command_button.setSizePolicy(sizePolicy)
+
+        self.verticalLayout.addWidget(self.command_button)
+
+        self.start_button = QPushButton(self.verticalLayoutWidget)
+        self.start_button.setObjectName(u"start_button")
+        sizePolicy1 = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Expanding)
+        sizePolicy1.setHorizontalStretch(0)
+        sizePolicy1.setVerticalStretch(0)
+        sizePolicy1.setHeightForWidth(self.start_button.sizePolicy().hasHeightForWidth())
+        self.start_button.setSizePolicy(sizePolicy1)
+
+        self.verticalLayout.addWidget(self.start_button)
+
+        self.stop_button = QPushButton(self.verticalLayoutWidget)
+        self.stop_button.setObjectName(u"stop_button")
+        sizePolicy1.setHeightForWidth(self.stop_button.sizePolicy().hasHeightForWidth())
+        self.stop_button.setSizePolicy(sizePolicy1)
+
+        self.verticalLayout.addWidget(self.stop_button)
+
+        self.startserver_button = QPushButton(self.verticalLayoutWidget)
+        self.startserver_button.setObjectName(u"startserver_button")
+        sizePolicy.setHeightForWidth(self.startserver_button.sizePolicy().hasHeightForWidth())
+        self.startserver_button.setSizePolicy(sizePolicy)
+
+        self.verticalLayout.addWidget(self.startserver_button)
+
+        self.horizontalSpacer = QSpacerItem(40, 10, QSizePolicy.Expanding, QSizePolicy.Minimum)
+
+        self.verticalLayout.addItem(self.horizontalSpacer)
+
+        MainWindow.setCentralWidget(self.centralwidget)
+        self.menubar = QMenuBar(MainWindow)
+        self.menubar.setObjectName(u"menubar")
+        self.menubar.setGeometry(QRect(0, 0, 260, 21))
+        MainWindow.setMenuBar(self.menubar)
+        self.statusbar = QStatusBar(MainWindow)
+        self.statusbar.setObjectName(u"statusbar")
+        MainWindow.setStatusBar(self.statusbar)
         self.command_input.setPlaceholderText("Enter Command")
-        layout.addWidget(self.command_input, 0, 0, 2, 3)
-
-        self.start_button = QPushButton("Start Voice Recognition")
         self.start_button.clicked.connect(self.start_voice_recog)
-        self.start_button.size
-        layout.addWidget(self.start_button, 2, 0, 6, 3)
-
-        self.stop_button = QPushButton("Stop Voice Recognition")
         self.stop_button.clicked.connect(self.stop_voice_recognition)
-        layout.addWidget(self.stop_button, 3, 0, 6, 3)
-
-        self.startserver_button = QPushButton("Start Server")
         self.startserver_button.clicked.connect(self.start_server)
-        layout.addWidget(self.startserver_button, 4, 0, 6, 3)
-
-        self.command_button = QPushButton("Send Command")
         self.command_button.clicked.connect(self.send_command)
-        layout.addWidget(self.command_button, 1, 0, 6, 3)
-        self.setLayout(layout)
+        self.retranslateUi(MainWindow)
 
+        QMetaObject.connectSlotsByName(MainWindow)
+    # setupUi
+
+    def retranslateUi(self, MainWindow):
+        _translate = QCoreApplication.translate
+        MainWindow.setWindowTitle(_translate("MainWindow", "Bot Control GUI"))
+        self.command_button.setText(_translate("MainWindow", "Send Command"))
+        self.start_button.setText(_translate("MainWindow", "Start Listening"))
+        self.stop_button.setText(_translate("MainWindow", "Stop Listening"))
+        self.startserver_button.setText(_translate("MainWindow", "Start/Connect to Server"))
+    # retranslateUi
+    
     def start_voice_recog(self):
         asyncio.create_task(self._start_voice_recog())
 
@@ -353,12 +415,17 @@ class MyWindow(QWidget):
         await command(command_text)
 
 
+
+
+
 stop_event = asyncio.Event()
 
 async def main(app):
-    window = MyWindow()
-    window.show() 
-
+    app = QApplication(sys.argv)
+    MainWindow = QMainWindow()
+    ui = Ui_MainWindow()
+    ui.setupUi(MainWindow)
+    MainWindow.show()
     loop = QEventLoop(app)
     asyncio.set_event_loop(loop)
 
