@@ -5,6 +5,7 @@ import threading
 import sys
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLineEdit, QPushButton, QLabel
 from PyQt5.QtCore import Qt
+from qasync import QEventLoop
 
 global running
 running = False
@@ -207,10 +208,10 @@ async def send_to_console(var1, var2):
     await bot.send_command_console(server_id, f'spawn botboy434 {string} {num}')
     print(f'spawn botboy434 {string} {num}')
 
-def start_voice_recognition():
+async def start_voice_recognition():
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-    loop.run_until_complete(voice_recog())
+    await loop.run_until_complete(voice_recog())
 
 async def voice_recog():
     global running
@@ -285,9 +286,6 @@ bot.config(client_id='client_75e6b625-24c6-4021-880c-ad28cf4413f3',
            client_secret='',
            debug=True)
 
-
-
-## Why the hell does my gui keep on freezing up, need to thread it i think
 class MyWindow(QWidget):
     def __init__(self):
         super().__init__()
@@ -306,7 +304,7 @@ class MyWindow(QWidget):
         layout.addWidget(self.command_input)
 
         self.start_button = QPushButton("Start Voice Recognition")
-        self.start_button.clicked.connect(self.start_voice_recognition)
+        self.start_button.clicked.connect(self.start_voice_recog)
         layout.addWidget(self.start_button)
 
         self.stop_button = QPushButton("Stop Voice Recognition")
@@ -323,21 +321,41 @@ class MyWindow(QWidget):
 
         self.setLayout(layout)
 
-    def start_voice_recognition(self):
-        asyncio.run(start())
+    def start_voice_recog(self):
+        asyncio.ensure_future(self._start_voice_recog())
+
+    async def _start_voice_recog(self):
+        await start()
 
     def stop_voice_recognition(self):
-        asyncio.run(stop())
+        asyncio.ensure_future(self._stop_voice_recognition())
+
+    async def _stop_voice_recognition(self):
+        await stop()
 
     def start_server(self):
-        asyncio.run(startserver())
+        asyncio.ensure_future(self._start_server())
+
+    async def _start_server(self):
+        await startserver()
 
     def send_command(self):
         command_text = self.command_input.text()
-        asyncio.run(command(command_text))
+        asyncio.ensure_future(self._send_command(command_text))
 
-if __name__ == "__main__":
+    async def _send_command(self, command_text):
+        await send_to_console(command_text)
+
+async def main():
     app = QApplication(sys.argv)
+    loop = QEventLoop(app)
+    asyncio.set_event_loop(loop)
+
     window = MyWindow()
     window.show()
-    sys.exit(app.exec_())
+
+    with loop:
+        await loop.run_forever()
+
+if __name__ == '__main__':
+    asyncio.run(main())
