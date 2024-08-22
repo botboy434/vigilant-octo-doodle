@@ -1,17 +1,19 @@
 import asyncio, datetime, json
-from pytale import Py_Tale
+from py_tale import Py_Tale
 import speech_recognition as sr
-import threading
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLineEdit, QPushButton, QLabel
+from PyQt5.QtWidgets import QApplication, QWidget, QGridLayout, QLineEdit, QPushButton, QLabel
 from PyQt5.QtCore import Qt
 from qasync import QEventLoop
-import signal
 
 global running
 running = False
 r = sr.Recognizer()
-server_id = 1906072840
+serverid=1111111111 # Insert your server ID here
+clientsecret='' #Insert your secret here
+clientid=''    # Insert your client ID here
+userid=1111111111 # Insert your user ID here
+scopestring='' # Insert your scopes from Joel here.
 phrase_lookup = {
     "short metal pointed handle": "HandleShortPointyEnd",
     "large green leather roll": "SoftFabricLargeRoll wyrmfaceleather",
@@ -183,14 +185,17 @@ phrases=('oakwood', 'birchwood', 'ashwood', 'redwood', 'psyblade', 'waka zasshi 
 
 
 async def command(command_to_run: str):
-    """Send a manual command to the server, and replies with the response"""
+    """Send a manual command to the server, and prints the response"""
+    print(f'Sent command: "{command_to_run}" to server!')
     await bot.wait_for_ws()
-    await bot.send_command_console(server_id, command_to_run)
+    await bot.send_command_console(serverid, command_to_run)
+
 
 async def startserver():
     """Starts a websocket console for the server"""
+    print('Opened websocket to server!')
     await bot.wait_for_ws()
-    await bot.create_console(server_id)
+    await bot.create_console(serverid)
 
 async def start():
     """Start voice recognition"""
@@ -205,7 +210,7 @@ async def stop():
 async def send_to_console(var1, var2):
     string = phrase_lookup.get(var1)
     num = int(var2)
-    await bot.send_command_console(server_id, f'spawn botboy434 {string} {num}')
+    await bot.send_command_console(serverid, f'spawn botboy434 {string} {num}')
     print(f'spawn botboy434 {string} {num}')
 
 async def start_voice_recognition():
@@ -221,11 +226,11 @@ async def voice_recog():
 
     while running:
         try:
-
             text = await asyncio.get_running_loop().run_in_executor(None, recognize_speech)
             text = text.lower()
 
             if "summon" in text or "salmon" in text:
+                print(text)
                 found_multi_word_phrase = None
                 for phrase, action in phrase_lookup.items():
                     if phrase in text:
@@ -280,13 +285,13 @@ async def on_ready():
     print("ready")
     asyncio.create_task(bot.run())
     await bot.wait_for_ws()
-    await bot.create_console(server_id, timeout=5)
+    await bot.create_console(serverid, timeout=5)
 
 bot = Py_Tale()
-bot.config(client_id='client_75e6b625-24c6-4021-880c-ad28cf4413f3',
-           user_id=1971323560,
-           scope_string='ws.group ws.group_members ws.group_servers ws.group_bans ws.group_invites group.info group.join group.leave group.view group.members group.invite server.view server.console',
-           client_secret='',
+bot.config(client_id=clientid,
+           user_id=userid,
+           scope_string=scopestring,
+           client_secret=clientsecret,
            debug=True)
 
 class MyWindow(QWidget):
@@ -296,32 +301,30 @@ class MyWindow(QWidget):
 
     def init_ui(self):
         self.setWindowTitle("Bot Control GUI")
-        self.setGeometry(100, 100, 400, 300)
+        self.setGeometry(0, 0, 259, 300)
 
-        layout = QVBoxLayout()
-
-        self.label = QLabel("Enter Command:")
-        layout.addWidget(self.label)
+        layout = QGridLayout()
 
         self.command_input = QLineEdit()
-        layout.addWidget(self.command_input)
+        self.command_input.setPlaceholderText("Enter Command")
+        layout.addWidget(self.command_input, 0, 0, 2, 3)
 
         self.start_button = QPushButton("Start Voice Recognition")
         self.start_button.clicked.connect(self.start_voice_recog)
-        layout.addWidget(self.start_button)
+        self.start_button.size
+        layout.addWidget(self.start_button, 2, 0, 6, 3)
 
         self.stop_button = QPushButton("Stop Voice Recognition")
         self.stop_button.clicked.connect(self.stop_voice_recognition)
-        layout.addWidget(self.stop_button)
+        layout.addWidget(self.stop_button, 3, 0, 6, 3)
 
         self.startserver_button = QPushButton("Start Server")
         self.startserver_button.clicked.connect(self.start_server)
-        layout.addWidget(self.startserver_button)
+        layout.addWidget(self.startserver_button, 4, 0, 6, 3)
 
         self.command_button = QPushButton("Send Command")
         self.command_button.clicked.connect(self.send_command)
-        layout.addWidget(self.command_button)
-
+        layout.addWidget(self.command_button, 1, 0, 6, 3)
         self.setLayout(layout)
 
     def start_voice_recog(self):
@@ -352,17 +355,19 @@ class MyWindow(QWidget):
 
 stop_event = asyncio.Event()
 
-async def main():
-    app = QApplication(sys.argv)
+async def main(app):
     window = MyWindow()
     window.show() 
+
     loop = QEventLoop(app)
     asyncio.set_event_loop(loop)
-    def signal_handler(sig, frame):
-        print("SIGINT received, stopping...")
-        stop_event.set()
 
-    signal.signal(signal.SIGINT, signal_handler)
+    def on_about_to_quit():
+        print("Application closing...")
+        running = False
+        stop_event.set()  
+
+    app.aboutToQuit.connect(on_about_to_quit)
 
     with loop:
         try:
@@ -373,4 +378,11 @@ async def main():
             app.quit()
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    app = QApplication(sys.argv)
+    loop = QEventLoop(app)
+    asyncio.set_event_loop(loop)
+
+    try:
+        loop.run_until_complete(main(app))
+    finally:
+        loop.close()
